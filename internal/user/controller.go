@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	responsebuilder "github.com/raffidevaa/me-commerce/pkg/response-builder"
+	responseBuilder "github.com/raffidevaa/me-commerce/pkg/response-builder"
 )
 
 type UserController struct {
@@ -18,33 +18,33 @@ func NewUserController(us *UserService) *UserController {
 func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responsebuilder.BadRequest(w, "invalid request body")
+		responseBuilder.BadRequest(w, "invalid request body")
 		return
 	}
 
 	user, err := c.userService.Register(r.Context(), req.ToUser())
 	if err != nil {
-		responsebuilder.BadRequest(w, err.Error())
+		responseBuilder.BadRequest(w, err.Error())
 		return
 	}
 
 	res := RegisterResponseFromUser(user)
 
-	responsebuilder.Created(w, "user registered successfully", res)
+	responseBuilder.Created(w, "user registered successfully", res)
 }
 
 func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responsebuilder.BadRequest(w, "invalid request body")
+		responseBuilder.BadRequest(w, "invalid request body")
 		return
 	}
 
 	loginRes, err := c.userService.Login(r.Context(), req)
 	if err != nil {
-		responsebuilder.Unauthorized(w, err.Error())
+		responseBuilder.Unauthorized(w, err.Error())
 		return
 	}
 
-	responsebuilder.OK(w, "login successful", loginRes)
+	responseBuilder.OK(w, "login successful", loginRes)
 }

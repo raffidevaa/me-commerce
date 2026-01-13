@@ -17,8 +17,8 @@ func Seed(db *gorm.DB) error {
 	}
 
 	products := []product.Product{
-		{Name: "Keyboard", Price: 1500000, Stock: 10},
-		{Name: "Mouse", Price: 500000, Stock: 20},
+		{Name: "Keyboard", Description: "This is Keyboard", Price: 1500000, Stock: 10},
+		{Name: "Mouse", Description: "This is Mouse", Price: 500000, Stock: 20},
 	}
 
 	for _, p := range products {

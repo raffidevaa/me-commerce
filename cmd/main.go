@@ -8,6 +8,7 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/raffidevaa/me-commerce/internal/product"
 	"github.com/raffidevaa/me-commerce/internal/user"
 	"github.com/raffidevaa/me-commerce/pkg/config"
 	"github.com/raffidevaa/me-commerce/pkg/database"
@@ -54,10 +55,17 @@ func loadConfiguration() (*gorm.DB, error) {
 }
 
 func handleRoutes(r chi.Router, db *gorm.DB) {
+	// user
 	userRepository := user.NewUserRepository(db)
 	userService := user.NewUserService(userRepository, db)
 	userController := user.NewUserController(userService)
 	user.Routes(r, userController)
+
+	// product
+	productRepository := product.NewProductRepository(db)
+	productService := product.NewProductService(productRepository, db)
+	productController := product.NewProductController(productService)
+	product.Routes(r, productController)
 }
 
 func main() {
@@ -76,6 +84,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	r.Use(middleware.Throttle(10))
 
 	//handle routes
 	handleRoutes(r, db)

@@ -6,7 +6,7 @@ type UserRoutes struct {
 	UserController *UserController
 }
 
-func NewController(ac *UserController) *UserRoutes {
+func NewUserRoutes(ac *UserController) *UserRoutes {
 	return &UserRoutes{
 		UserController: ac,
 	}
