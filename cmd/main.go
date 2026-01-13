@@ -8,6 +8,7 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/raffidevaa/me-commerce/internal/user"
 	"github.com/raffidevaa/me-commerce/pkg/config"
 	"github.com/raffidevaa/me-commerce/pkg/database"
 	"gorm.io/gorm"
@@ -36,7 +37,7 @@ func handleCommand(args []string, db *gorm.DB) {
 	}
 }
 
-func main() {
+func loadConfiguration() (*gorm.DB, error) {
 	cfg := config.Load()
 
 	db := database.NewPostgres(database.PostgresConfig{
@@ -49,6 +50,23 @@ func main() {
 	database.AutoMigrate(db)
 	database.Seed(db)
 
+	return db, nil
+}
+
+func handleRoutes(r chi.Router, db *gorm.DB) {
+	userRepository := user.NewUserRepository(db)
+	userService := user.NewUserService(userRepository, db)
+	userController := user.NewUserController(userService)
+	user.Routes(r, userController)
+}
+
+func main() {
+	// load configuration
+	db, err := loadConfiguration()
+	if err != nil {
+		log.Fatal("Failed to load configuration:", err)
+	}
+
 	args := os.Args
 
 	if len(args) > 1 {
@@ -58,13 +76,16 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
+	//handle routes
+	handleRoutes(r, db)
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Server is healthy"))
 	})
-	http.ListenAndServe(":8080", r)
-	log.Println("DB:", cfg.DBHost, cfg.DBPort)
 
 	myFigure := figure.NewColorFigure("ME-COMMERCE", "", "green", true)
 	myFigure.Print()
 
+	http.ListenAndServe(":8080", r)
 }
