@@ -87,5 +87,6 @@ func main() {
 	myFigure := figure.NewColorFigure("ME-COMMERCE", "", "green", true)
 	myFigure.Print()
 
+	log.Println("Server is speed-running on :8080")
 	http.ListenAndServe(":8080", r)
 }

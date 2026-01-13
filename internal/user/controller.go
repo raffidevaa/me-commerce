@@ -32,3 +32,19 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 
 	responsebuilder.Created(w, "user registered successfully", res)
 }
+
+func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		responsebuilder.BadRequest(w, "invalid request body")
+		return
+	}
+
+	loginRes, err := c.userService.Login(r.Context(), req)
+	if err != nil {
+		responsebuilder.Unauthorized(w, err.Error())
+		return
+	}
+
+	responsebuilder.OK(w, "login successful", loginRes)
+}

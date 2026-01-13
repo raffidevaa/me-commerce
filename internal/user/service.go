@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/raffidevaa/me-commerce/pkg/helpers"
+	"github.com/raffidevaa/me-commerce/pkg/jwtauth"
 	"gorm.io/gorm"
 )
 
@@ -40,4 +41,29 @@ func (s *UserService) Register(ctx context.Context, u User) (User, error) {
 
 	return insertedUser, nil
 
+}
+
+func (s *UserService) Login(ctx context.Context, req LoginRequest) (LoginResponse, error) {
+	user, isExist := s.repo.FindByEmail(ctx, s.db, req.Email)
+	if !isExist {
+		return LoginResponse{}, errors.New("email or password is incorrect")
+	}
+
+	isValid := helpers.CheckPasswordHash(req.Password, user.Password)
+	if !isValid {
+		return LoginResponse{}, errors.New("email or password is incorrect")
+	}
+
+	// generate token jwt
+	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+
+	_, tokenString, _ := tokenAuth.Encode(map[string]interface{}{"user_id": user.ID, "role:": user.Role})
+
+	res := LoginResponse{
+		UserID: user.ID,
+		Email:  user.Email,
+		Token:  tokenString,
+	}
+
+	return res, nil
 }

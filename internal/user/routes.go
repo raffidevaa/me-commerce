@@ -15,5 +15,7 @@ func NewController(ac *UserController) *UserRoutes {
 func Routes(r chi.Router, c *UserController) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", c.Register)
+		r.Post("/login", c.Login)
 	})
+
 }
