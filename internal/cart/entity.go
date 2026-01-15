@@ -10,8 +10,7 @@ type CartItem struct {
 }
 
 type Cart struct {
-	ID        uint       `gorm:"primaryKey"`
-	UserID    uint       `gorm:"uniqueIndex"`
-	Items     []CartItem `gorm:"foreignKey:CartID"`
+	ID        uint `gorm:"primaryKey"`
+	UserID    uint `gorm:"uniqueIndex"`
 	UpdatedAt time.Time
 }

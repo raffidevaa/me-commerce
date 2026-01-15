@@ -8,10 +8,13 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
+	"github.com/raffidevaa/me-commerce/internal/cart"
 	"github.com/raffidevaa/me-commerce/internal/product"
 	"github.com/raffidevaa/me-commerce/internal/user"
 	"github.com/raffidevaa/me-commerce/pkg/config"
 	"github.com/raffidevaa/me-commerce/pkg/database"
+	"github.com/raffidevaa/me-commerce/pkg/jwtauth"
 	"gorm.io/gorm"
 )
 
@@ -54,10 +57,10 @@ func loadConfiguration() (*gorm.DB, error) {
 	return db, nil
 }
 
-func handleRoutes(r chi.Router, db *gorm.DB) {
+func handleRoutes(r chi.Router, tokenAuth *jwtauth.JWTAuth, db *gorm.DB) {
 	// user
 	userRepository := user.NewUserRepository(db)
-	userService := user.NewUserService(userRepository, db)
+	userService := user.NewUserService(userRepository, tokenAuth, db)
 	userController := user.NewUserController(userService)
 	user.Routes(r, userController)
 
@@ -66,9 +69,19 @@ func handleRoutes(r chi.Router, db *gorm.DB) {
 	productService := product.NewProductService(productRepository, db)
 	productController := product.NewProductController(productService)
 	product.Routes(r, productController)
+
+	// cart
+	cartRepository := cart.NewCartRepository(db)
+	cartService := cart.NewCartService(cartRepository, db)
+	cartController := cart.NewCartController(cartService)
+	cart.Routes(r, cartController, tokenAuth)
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found")
+	}
 	// load configuration
 	db, err := loadConfiguration()
 	if err != nil {
@@ -82,12 +95,15 @@ func main() {
 		return
 	}
 
+	// generate token jwt
+	tokenAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET_KEY")), nil)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Throttle(10))
 
 	//handle routes
-	handleRoutes(r, db)
+	handleRoutes(r, tokenAuth, db)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Server is healthy"))
@@ -96,6 +112,6 @@ func main() {
 	myFigure := figure.NewColorFigure("ME-COMMERCE", "", "green", true)
 	myFigure.Print()
 
-	log.Println("Server is speed-running on :8080")
+	log.Println("Server is speed-running on 8080")
 	http.ListenAndServe(":8080", r)
 }

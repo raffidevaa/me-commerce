@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/raffidevaa/me-commerce/pkg/helpers"
 	"github.com/raffidevaa/me-commerce/pkg/jwtauth"
@@ -10,12 +11,17 @@ import (
 )
 
 type UserService struct {
-	repo *UserRepository
-	db   *gorm.DB
+	repo      *UserRepository
+	tokenAuth *jwtauth.JWTAuth
+	db        *gorm.DB
 }
 
-func NewUserService(repo *UserRepository, db *gorm.DB) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo *UserRepository, tokenAuth *jwtauth.JWTAuth, db *gorm.DB) *UserService {
+	return &UserService{
+		repo:      repo,
+		tokenAuth: tokenAuth,
+		db:        db,
+	}
 }
 
 func (s *UserService) Register(ctx context.Context, u User) (User, error) {
@@ -54,10 +60,15 @@ func (s *UserService) Login(ctx context.Context, req LoginRequest) (LoginRespons
 		return LoginResponse{}, errors.New("email or password is incorrect")
 	}
 
-	// generate token jwt
-	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+	claims := map[string]interface{}{
+		"user_id": user.ID,
+		"role":    user.Role,
+	}
 
-	_, tokenString, _ := tokenAuth.Encode(map[string]interface{}{"user_id": user.ID, "role:": user.Role})
+	jwtauth.SetIssuedNow(claims)
+	jwtauth.SetExpiryIn(claims, 24*time.Hour)
+
+	_, tokenString, _ := s.tokenAuth.Encode(claims)
 
 	res := LoginResponse{
 		UserID: user.ID,
