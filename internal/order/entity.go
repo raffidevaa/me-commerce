@@ -15,7 +15,6 @@ type Order struct {
 	UserID    uint   `gorm:"not null"`
 	Total     int64  `gorm:"not null"`
 	Status    string `gorm:"type:varchar(20)"`
-	Items     []OrderItem
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

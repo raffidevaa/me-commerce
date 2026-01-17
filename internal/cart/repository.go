@@ -79,3 +79,28 @@ func (r *CartRepository) CheckCartExistsByUserID(ctx context.Context, tx *gorm.D
 
 	return count > 0, nil
 }
+
+func (r *CartRepository) GetCartItemByCartItemID(ctx context.Context, tx *gorm.DB, cartItemID uint) (CartItem, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var cartItem CartItem
+	if err := tx.WithContext(ctx).Where("id = ?", cartItemID).First(&cartItem).Error; err != nil {
+		return CartItem{}, err
+	}
+
+	return cartItem, nil
+}
+
+func (r *CartRepository) UpdateCartItemIsAlreadyPurchased(ctx context.Context, tx *gorm.DB, cartItemID uint, isAlreadyPurchased bool) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).Model(&CartItem{}).Where("id = ?", cartItemID).Update("is_already_purchased", isAlreadyPurchased).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

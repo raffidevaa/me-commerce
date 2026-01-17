@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/raffidevaa/me-commerce/internal/cart"
+	"github.com/raffidevaa/me-commerce/internal/order"
 	"github.com/raffidevaa/me-commerce/internal/product"
 	"github.com/raffidevaa/me-commerce/internal/user"
 	"github.com/raffidevaa/me-commerce/pkg/config"
@@ -75,6 +76,12 @@ func handleRoutes(r chi.Router, tokenAuth *jwtauth.JWTAuth, db *gorm.DB) {
 	cartService := cart.NewCartService(cartRepository, db)
 	cartController := cart.NewCartController(cartService)
 	cart.Routes(r, cartController, tokenAuth)
+
+	// order
+	orderRepository := order.NewOrderRepository(db)
+	orderService := order.NewOrderService(orderRepository, cartRepository, productRepository, db)
+	orderController := order.NewOrderController(orderService)
+	order.Routes(r, orderController, tokenAuth)
 }
 
 func main() {
