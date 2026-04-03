@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,7 @@ import (
 	"github.com/raffidevaa/me-commerce/internal/cart"
 	"github.com/raffidevaa/me-commerce/internal/order"
 	"github.com/raffidevaa/me-commerce/internal/product"
+	"github.com/raffidevaa/me-commerce/internal/rabbitmq"
 	"github.com/raffidevaa/me-commerce/internal/user"
 	"github.com/raffidevaa/me-commerce/pkg/config"
 	"github.com/raffidevaa/me-commerce/pkg/database"
@@ -52,8 +54,8 @@ func loadConfiguration() (*gorm.DB, error) {
 		Password: cfg.DBPassword,
 		DBName:   cfg.DBName,
 	})
-	database.AutoMigrate(db)
-	database.Seed(db)
+	// database.AutoMigrate(db)
+	// database.Seed(db)
 
 	return db, nil
 }
@@ -97,8 +99,14 @@ func main() {
 
 	args := os.Args
 
-	if len(args) > 1 {
-		handleCommand(args[1:], db)
+	// if len(args) > 1 {
+	// 	handleCommand(args[1:], db)
+	// 	return
+	// }
+
+	//for testing rabbitmq purpose
+	if len(args) > 1 && args[1] == "rabbit-test" {
+		rabbitHelloTest()
 		return
 	}
 
@@ -121,4 +129,29 @@ func main() {
 
 	log.Println("Server is speed-running on 8080")
 	http.ListenAndServe(":8080", r)
+}
+
+func rabbitHelloTest() {
+	rmq := rabbitmq.NewRabbitMQConnection()
+	defer rmq.Conn.Close()
+
+	// start consumer
+	rmq.Consume("hello.queue", func(body []byte) error {
+		log.Println("🐰 received:", string(body))
+		return nil
+	})
+
+	// kasih waktu consumer siap
+	time.Sleep(1 * time.Second)
+
+	// publish message
+	err := rmq.Publish("hello.queue", []byte(`{"message":"hello rabbitmq xixixi"}`))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("📤 message published")
+
+	// block process biar consumer hidup
+	select {}
 }

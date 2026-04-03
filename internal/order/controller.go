@@ -3,7 +3,9 @@ package order
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/raffidevaa/me-commerce/pkg/jwtauth"
 	responseBuilder "github.com/raffidevaa/me-commerce/pkg/response-builder"
 )
@@ -54,4 +56,27 @@ func (c *OrderController) GetOrdersByUserID(w http.ResponseWriter, r *http.Reque
 	}
 
 	responseBuilder.OK(w, "orders retrieved successfully", orders)
+}
+
+func (c *OrderController) Payment(w http.ResponseWriter, r *http.Request){
+	_, ok := jwtauth.GetClaims(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	orderIDParam := chi.URLParam(r, "id")
+	orderID, err := strconv.ParseUint(orderIDParam, 10, 32)
+	if err != nil {
+		responseBuilder.BadRequest(w, "failed parsing id param")
+		return
+	}
+
+	order, err := c.orderService.Payment(r.Context(), uint(orderID))
+	if err != nil{
+		responseBuilder.BadRequest(w, "failed payment")
+		return
+	} 
+	
+	responseBuilder.OK(w, "payment succes", order)
 }

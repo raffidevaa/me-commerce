@@ -19,6 +19,7 @@ func Routes(r chi.Router, c *OrderController, tokenAuth *jwtauth.JWTAuth) {
 		r.Use(jwtauth.Authenticator(tokenAuth))
 
 		r.Post("/checkout", c.CreateOrder)
+		r.Post("/pay", c.Payment)
 		r.Get("/", c.GetOrdersByUserID)
 	})
 

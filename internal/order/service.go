@@ -88,3 +88,17 @@ func (s *OrderService) GetOrdersByUserID(ctx context.Context, userID uint) ([]Or
 
 	return orders, nil
 }
+
+func (s *OrderService) Payment(ctx context.Context, orderID uint) (Order, error) {
+	order, err := s.orderRepository.GetOrderByID(ctx, orderID)
+	if err != nil {
+		return Order{}, errors.New("failed get order by id")
+	}
+
+	_, err = s.orderRepository.Payment(ctx, order.ID)
+	if err != nil {
+		return Order{}, errors.New("failed payment")
+	}
+
+	return order, nil
+}

@@ -46,3 +46,29 @@ func (r *OrderRepository) GetOrdersByUserID(ctx context.Context, userID uint) ([
 
 	return orders, nil
 }
+
+func (r *OrderRepository) GetOrderByID(ctx context.Context, orderID uint) (Order, error) {
+	tx := r.db.WithContext(ctx)
+
+	var order Order
+	if err := tx.Where("id = ?", orderID).First("id", orderID).Error; err != nil {
+		return Order{}, err
+	}
+
+	return order, nil
+}
+
+func (r *OrderRepository) Payment(ctx context.Context, orderID uint) (Order, error) {
+	tx := r.db.WithContext(ctx)
+	
+	var order Order
+
+	if err := tx.Where("id = ?", orderID).Update("status", StatusPaid).Error; err != nil {
+		return Order{}, err
+	}
+
+	return order, nil
+}
+
+
+
