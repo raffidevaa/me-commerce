@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    container_name: me-commerce-app
+    ports:
+      - "8080:8080"
+    env_file: 
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: me-commerce-db 
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: me-commerce  
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+
+volumes:
+  postgres_data:
+
+
+      
+
